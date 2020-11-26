@@ -30,23 +30,34 @@ const useStyles = makeStyles({
 
 function App() {
   const [cards, setCards] = useState([]);
-  const [planets, setPlanets] = useState([]);
   const date = new Date();
   const classes = useStyles();
 
   useEffect(() => {
-    api.getInitialCards()
-    .then(items => {
-      setCards(items.results)
-    })
-    api.getPlanets()
-    .then(items => {
-      console.log(items.results);
-      const newItems = items.results.map(item => {
-        return item = item.name
+    return fetch(`https://swapi.dev/api/people/`)
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(`Error: ${res.status}`);
       })
-      setPlanets(newItems)
-    })
+      .then(res => {
+        res.results.forEach(item => {
+           fetch(item.homeworld)
+            .then(result => {
+              if (result.ok) {
+                return result.json()
+              }
+              return Promise.reject(`Error: ${res.status}`);
+            })
+            .then(result => {
+              item.home = result.name
+              return item
+            })
+        })
+        console.log(res.results);
+      })
+      .then()
   }, []);
 
   return (
@@ -75,8 +86,7 @@ function App() {
                     </Typography>
                     <Typography component="p">Gender: {card.gender}</Typography>
                     <Typography component="p">
-                      Homeworld:{" "}
-                      
+                      Howeworld: {card.home}
                     </Typography>
                   </CardContent>
                 </Link>

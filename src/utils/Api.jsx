@@ -1,5 +1,3 @@
-import axios from "axios";
-
 class Api {
   constructor(options) {
     this._baseUrl = options.baseUrl;
@@ -10,26 +8,47 @@ class Api {
     if (res.ok) {
       return res.json();
     }
-    return Promise.reject(`Error: ${res.status}`)
   }
 
   getInitialCards() {
-    return fetch(`${this._baseUrl}/people`)
-    .then(this._checkError);
+    return fetch(`${this._baseUrl}/people/`)
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(`Error: ${res.status}`);
+      })
+      .then(res => {
+        const finalArr = res.results.map(item => {
+           fetch(item.homeworld)
+            .then(result => {
+              if (result.ok) {
+                return result.json()
+              }
+              return Promise.reject(`Error: ${res.status}`);
+            })
+            .then(result => {
+              item.home = result.name
+              return item
+            })
+        })
+        
+        console.log(finalArr);
+        return finalArr
+      })
+      .then(res => res)
   }
 
   getPlanets() {
-    return fetch(`${this._baseUrl}/planets`)
-    .then(this._checkError);
+    return fetch(`${this._baseUrl}/planets`).then(this._checkError);
   }
 }
 
-const api = new Api ({
-  baseUrl: 'https://swapi.dev/api',
+const api = new Api({
+  baseUrl: "https://swapi.dev/api",
   headers: {
-    'Content-Type': 'application/json'
-  }
-})
-
+    "Content-Type": "application/json",
+  },
+});
 
 export default api;
